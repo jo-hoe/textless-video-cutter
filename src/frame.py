@@ -26,7 +26,6 @@ class Frame():
         # If the mean is close to zero, the frame is black
         return mean < self.DARKNESS_THRESHOLD
 
-
     def _has_text(self, frame):
         text = pytesseract.image_to_string(frame)
         # If the text is not empty, the frame contains text
@@ -42,11 +41,11 @@ class Frame():
     @property
     def has_text(self):
         return self._is_frame_has_text
-    
+
     @property
     def get_timestamp(self):
         return self._timestamp
-    
+
     @property
     def is_valid(self):
         return self._is_valid
