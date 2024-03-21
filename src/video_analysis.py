@@ -109,10 +109,14 @@ def filter_intervals(intervals: list[tuple[float, float]], min_length_in_seconds
 
     return result
 
-# for debugging only
-
 
 def showImage(img):
+    """
+    Only used for debugging purposes
+    Show an image in a new window
+    Args:
+        img: The image to show
+    """
 
     def show(img):
         cv2.imshow(str(uuid.uuid4()), img)
