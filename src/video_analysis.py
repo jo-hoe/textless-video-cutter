@@ -21,42 +21,41 @@ def analyse_video_for_valid_sections(video_path: str, sample_rate_in_Hz: int = 2
     # Open the video file
     video = cv2.VideoCapture(video_path)
 
-    # Calculate how many frames to skip
-    fps = video.get(cv2.CAP_PROP_FPS)
-    step_size = int(fps / sample_rate_in_Hz)
+    # Calculate how many frames to skip per second
+    frames_to_skip_per_second = int(video.get(cv2.CAP_PROP_FPS) / sample_rate_in_Hz)
+    # Calculate the total number of frames
+    total_frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Calculate the total number of frames to process
+    frames_to_process = total_frame_count - (frames_to_skip_per_second - 1)
 
-    # create loading bar
-    total_frame_count = video.get(cv2.CAP_PROP_FRAME_COUNT)
     video_name = os.path.basename(video_path)
-    loading_bar = tqdm(total=(total_frame_count - step_size),
-                       desc=f"analyzing video '{video_name}'")
+    loading_bar = tqdm(total=frames_to_process + frames_to_skip_per_second, desc=f"Analyzing video '{video_name}'")
 
     frame_count = 0
     results = []
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         futures = []
-        while video.isOpened():
+        while frame_count < total_frame_count:
+            # Set the position of the next frame to read
+            video.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
             # Read a frame from the video
             is_valid_frame, frame = video.read()
-            # If the frame is valid, process it
+            # If the frame is not valid, break the loop
             if not is_valid_frame:
                 break
 
             # Calculate the timestamp of the frame
-            timestamp = frame_count / fps
-            # schedule the frame processing function
-            future = executor.submit(
-                analyse_frame_for_valid_sections, timestamp, frame)
+            timestamp = frame_count / video.get(cv2.CAP_PROP_FPS)
+            # Schedule the frame processing function
+            future = executor.submit(analyse_frame_for_valid_sections, timestamp, frame)
             futures.append(future)
 
+            loading_bar.update(frames_to_skip_per_second)
+
             # Increment the frame counter
-            frame_count += step_size
-            # Skip the next frame
-            video.set(cv2.CAP_PROP_POS_FRAMES, frame_count + step_size)
+            frame_count += frames_to_skip_per_second
 
-            loading_bar.update(step_size)
-
-        # get the results as they are ready
+        # Get the results as they are ready
         for future in as_completed(futures):
             results.append(future.result())
 
@@ -65,6 +64,7 @@ def analyse_video_for_valid_sections(video_path: str, sample_rate_in_Hz: int = 2
 
     sorted_result = sorted(results, key=lambda x: x.get_timestamp)
     return sorted_result
+
 
 
 def get_valid_intervals(frames: list[Frame], noise_threshold=1):

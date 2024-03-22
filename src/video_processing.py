@@ -5,7 +5,8 @@ import ffmpeg
 def cut_video(path_to_video: str, output_folder: str, cut_list: list[tuple[float, float]]):
     filename_without_extension = os.path.splitext(
         os.path.basename(path_to_video))[0]
-    # Loop through the list and create a subclip for each pair of times
+    filename_without_extension = filename_without_extension.replace("\"", "").replace("'", "")
+    # Loop through the list and create a sub clip for each pair of times
     digits = len(str(len(cut_list)))
     for i, (start, end) in enumerate(cut_list):
         # produce file with name like part_01_<filename>.mp4
