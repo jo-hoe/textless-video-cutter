@@ -29,7 +29,7 @@ def analyse_video_for_valid_sections(video_path: str, sample_rate_in_Hz: int = 2
     frames_to_process = total_frame_count - (frames_to_skip_per_second - 1)
 
     video_name = os.path.basename(video_path)
-    loading_bar = tqdm(total=frames_to_process + frames_to_skip_per_second, desc=f"Analyzing video '{video_name}'")
+    loading_bar = tqdm(total=frames_to_process + frames_to_skip_per_second, desc=f"Analyzing video '{video_name[:24]}'")
 
     frame_count = 0
     results = []
